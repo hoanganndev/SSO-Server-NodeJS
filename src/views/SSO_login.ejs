@@ -68,6 +68,20 @@
                     },
                 });
             });
+            // login with google
+            $("#iconGoogle").on("click", function () {
+                const serviceURL = $("#redireactURL").val();
+                localStorage.removeItem("clientURL");
+                localStorage.setItem("clientURL", serviceURL);
+                window.location.href = "/auth/google";
+            });
+            // login with facebook
+            $("#iconFacebook").on("click", function () {
+                const serviceURL = $("#redireactURL").val();
+                localStorage.removeItem("clientURL");
+                localStorage.setItem("clientURL", serviceURL);
+                window.location.href = "/auth/facebook";
+            });
         });
     </script>
     <body>

@@ -97,9 +97,10 @@ const handleUserLogin = async rawData => {
         };
     }
 };
+
 const updateUserRefreshToken = async (email, token) => {
     try {
-        const a = await db.User.update(
+        await db.User.update(
             {
                 refreshToken: token,
             },
@@ -109,103 +110,34 @@ const updateUserRefreshToken = async (email, token) => {
         console.log(">>> error updateUserRefreshToken", error);
     }
 };
-// const updateUserCode = async (email, code) => {
-//     try {
-//         await db.User.update(
-//             {
-//                 code: code,
-//             },
-//             { where: { email, type: "LOCAL" } }
-//         );
-//     } catch (error) {
-//         console.log(">>> error updateUserCode", error);
-//     }
-// };
-// // update and insert new user from social media
-// const upsertUserSocialMedia = async (AccountType, rawData) => {
-//     try {
-//         let user = null;
-//         user = await db.User.findOne({
-//             where: {
-//                 email: rawData.email,
-//                 type: AccountType,
-//             },
-//             raw: true, // return data js
-//         });
-//         if (!user) {
-//             //create new user
-//             user = await db.User.create({
-//                 email: rawData.email,
-//                 username: rawData.username,
-//                 type: AccountType,
-//             });
-//             user = user.get({ plain: true });
-//         }
-//         return user;
-//     } catch (error) {
-//         console.log(">>> check error", error);
-//     }
-// };
-//
-// const getUserByRefreshToken = async token => {
-//     try {
-//         let user = await db.User.findOne({
-//             where: {
-//                 refreshToken: token,
-//             },
-//         });
-//         if (user) {
-//             let groupWithRoles = await getGroupWithRoles(user);
-//             return {
-//                 email: user.email,
-//                 groupWithRoles: groupWithRoles,
-//                 username: user.username,
-//             };
-//         }
-//         return null;
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
-// const isEmailLocal = async email => {
-//     try {
-//         let user = await db.User.findOne({
-//             where: { email, type: "LOCAL" },
-//         });
-//         if (user) {
-//             return true;
-//         } else {
-//             return false;
-//         }
-//     } catch (error) {
-//         return false;
-//     }
-// };
-// const resetUserPassword = async rawData => {
-//     try {
-//         let newPassword = hashUserPassword(rawData.newPassword);
-//         let count = await db.User.update(
-//             {
-//                 password: newPassword,
-//             },
-//             {
-//                 where: {
-//                     email: rawData.email,
-//                     code: rawData.code,
-//                     type: "LOCAL",
-//                 },
-//             }
-//         );
-//         if (count && count[0]) {
-//             return true;
-//         }
-//         return false;
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
+
+// Update or insert new user from social media
+const upsertUserSocialMedia = async (accountType, rawData) => {
+    try {
+        let user = null;
+        user = await db.User.findOne({
+            where: {
+                email: rawData.email,
+                accountType: accountType,
+            },
+        });
+        if (!user) {
+            // Create new user
+            user = await db.User.create({
+                email: rawData.email,
+                username: rawData.username,
+                accountType: accountType,
+            });
+        }
+        return user.get({ plain: true });
+    } catch (error) {
+        console.log(">>> check error", error);
+    }
+};
+
 module.exports = {
     registerNewUser,
     handleUserLogin,
     updateUserRefreshToken,
+    upsertUserSocialMedia,
 };
