@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
-import SSO_passportLocalController from "../controller/SSO_passportLocalController";
 import SSO_loginController from "../controller/SSO_loginController";
+import SSO_passportLocalController from "../controller/SSO_passportLocalController";
 import webController from "../controller/webController";
 import { isLogin } from "../middleware/SSO_checkUserLogin";
 const router = express.Router();
@@ -34,6 +34,39 @@ const initSSOWebRoutes = app => {
     });
     router.post("/logout", SSO_passportLocalController.handleLogout);
     router.post("/verify-token", SSO_loginController.verifySSOToken);
+
+    //Google
+    router.get(
+        "/auth/google",
+        passport.authenticate("google", { scope: ["profile", "email"] })
+    );
+
+    router.get(
+        "/google/redirect",
+        passport.authenticate("google", { failureRedirect: "/login" }),
+        function (req, res) {
+            //save cookies
+            const ssoToken = req.user.code;
+            return res.render("SSO_socials.ejs", { ssoToken });
+        }
+    );
+
+    //Facebook
+    router.get(
+        "/auth/facebook",
+        passport.authenticate("facebook", { scope: ["email"] })
+    );
+
+    router.get(
+        "/facebook/redirect",
+        passport.authenticate("facebook", { failureRedirect: "/login" }),
+        function (req, res) {
+            //save cookies
+            console.log(">>> req.user", req.user);
+            const ssoToken = req.user.code;
+            return res.render("SSO_socials.ejs", { ssoToken });
+        }
+    );
     return app.use("/", router);
 };
 export default initSSOWebRoutes;

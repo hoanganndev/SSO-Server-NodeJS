@@ -1,7 +1,7 @@
 import passport from "passport";
 import LocalStrategy from "passport-local";
 import loginRegisterService from "../service/loginRegisterService";
-const configPassport = () => {
+const configPassportLocal = () => {
     passport.use(
         new LocalStrategy(
             {
@@ -33,4 +33,4 @@ const handleLogout = (req, res, next) => {
         }); // just only remove session at database, browser still not
     });
 };
-module.exports = { configPassport, handleLogout };
+module.exports = { configPassportLocal, handleLogout };

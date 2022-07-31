@@ -8,8 +8,10 @@ import initApiRoutes from "./routes/api";
 import initWebRoutes from "./routes/web";
 import initSSOWebRoutes from "./routes/SSO_web";
 import cookieParser from "cookie-parser";
-//
-import { configPassport } from "./controller/SSO_passportLocalController";
+// Config passport
+import { configPassportLocal } from "./controller/SSO_passportLocalController";
+import { configPassportGoogle } from "./controller/SSO_passportGoogleController";
+import { configPassportFacebook } from "./controller/SSO_passportFacebookController";
 import configSession from "./config/session";
 
 const app = express();
@@ -40,7 +42,9 @@ initApiRoutes(app);
 initSSOWebRoutes(app);
 
 // Config passport
-configPassport();
+configPassportLocal();
+configPassportGoogle();
+configPassportFacebook();
 
 app.listen(PORT, () => {
     console.log(`🟢🟢🟢 Server jwt is running on the port: ${PORT}`);
