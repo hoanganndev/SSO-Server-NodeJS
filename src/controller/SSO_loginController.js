@@ -4,7 +4,7 @@ import { createJWT } from "../middleware/JWTAction";
 import { updateUserRefreshToken } from "../service/loginRegisterService";
 
 const getLoginPage = (req, res) => {
-    // validate url
+    // Validate url
     const { serviceURL } = req.query;
     return res.render("SSO_login.ejs", { redireactURL: serviceURL });
 };
@@ -12,19 +12,19 @@ const getLoginPage = (req, res) => {
 const verifySSOToken = async (req, res) => {
     try {
         const { ssoToken } = req.body;
-        // compare session id successed
+        // Compare session id successed
         if (req.user && req.user.code && req.user.code === ssoToken) {
             const refreshToken = uuidv4();
-            // update user
+            // Update user
             await updateUserRefreshToken(req.user.email, refreshToken);
-            // create access token
+            // Create access token
             let payload = {
                 email: req.user.email,
                 username: req.user.username,
                 groupWithRoles: req.user.groupWithRoles,
             };
             let token = createJWT(payload);
-            // set cookies
+            // Set cookies
             res.cookie("access_token", token, {
                 maxAge: +process.env.MAX_AGE_ACCESS_TOKEN,
                 httpOnly: true,
@@ -44,7 +44,7 @@ const verifySSOToken = async (req, res) => {
                 username: req.user.username,
                 groupWithRoles: req.user.groupWithRoles,
             };
-            // remove session in db
+            // Remove session in db
             req.session.destroy(function (err) {
                 req.logout(function (error) {
                     if (err) {
