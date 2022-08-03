@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Op } from "sequelize"; // operator in sequelize: toan tu
+import { v4 as uuidv4 } from "uuid";
 import db from "../models";
 import {
     checkEmailExist,
@@ -8,8 +9,6 @@ import {
     hashUserPassword,
 } from "./inspectionService";
 import { getGroupWithRoles } from "./rolesOfGroupService";
-import { createJWT } from "../middleware/JWTAction";
-import { v4 as uuidv4 } from "uuid";
 
 const registerNewUser = async rawUserData => {
     try {
@@ -135,9 +134,31 @@ const upsertUserSocialMedia = async (accountType, rawData) => {
     }
 };
 
+const getUserByRefreshToken = async token => {
+    try {
+        let user = await db.User.findOne({
+            where: {
+                refreshToken: token,
+            },
+        });
+        if (user) {
+            let groupWithRoles = await getGroupWithRoles(user);
+            return {
+                email: user.email,
+                username: user.username,
+                groupWithRoles: groupWithRoles,
+            };
+        }
+        return null;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 module.exports = {
     registerNewUser,
     handleUserLogin,
     updateUserRefreshToken,
     upsertUserSocialMedia,
+    getUserByRefreshToken,
 };

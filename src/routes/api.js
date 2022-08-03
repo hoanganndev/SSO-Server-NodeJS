@@ -2,7 +2,11 @@ import express from "express";
 import groupController from "../controller/groupController";
 import loginRegisterController from "../controller/loginRegisterController";
 import userController from "../controller/userController";
-import { checkUserJWT, checkUserPermission } from "../middleware/JWTAction";
+import {
+    checkUserJWT,
+    checkUserPermission,
+    checkServiceJWT,
+} from "../middleware/JWTAction";
 import rolesController from "../controller/rolesController";
 import groupRolesController from "../controller/groupRolesController";
 const router = express.Router();
@@ -47,6 +51,9 @@ const initApiRoutes = app => {
         "/roles/assign-to-group",
         groupRolesController.assignRolesToGroupFunction
     );
+
+    //
+    router.get("/verify-services-jwt", checkServiceJWT);
 
     return app.use("/api/v1/", router);
 };

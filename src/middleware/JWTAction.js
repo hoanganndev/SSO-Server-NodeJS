@@ -1,7 +1,18 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
-
-const nonSecurePaths = ["/", "/login", "/logout", "/register"];
+import { v4 as uuidv4 } from "uuid";
+import {
+    getUserByRefreshToken,
+    updateUserRefreshToken,
+} from "../service/loginRegisterService";
+import "dotenv/config";
+const nonSecurePaths = [
+    "/",
+    "/login",
+    "/logout",
+    "/register",
+    "/verify-services-jwt",
+];
 
 const createJWT = payload => {
     let secretKey = process.env.JWT_SECRET;
@@ -22,7 +33,11 @@ const verifyToken = token => {
     try {
         decoded = jwt.verify(token, secretKey);
     } catch (err) {
-        console.log("🔴>>> Verify jwt from server error !", err);
+        if (err instanceof jwt.TokenExpiredError) {
+            return "TokenExpiredError";
+        } else {
+            return err;
+        }
     }
     return decoded;
 };
@@ -38,10 +53,13 @@ const extractToken = req => {
 };
 
 // Check token validity
-const checkUserJWT = (req, res, next) => {
+const checkUserJWT = async (req, res, next) => {
+    //console.log(">>> check me");
     if (nonSecurePaths.includes(req.path)) return next();
     let cookies = req.cookies;
     let tokenFromHeader = extractToken(req);
+    //console.log(">>> check tokenFromHeader", tokenFromHeader);
+    //console.log(">>> check cookies", cookies.access_token);
     if ((cookies && cookies.access_token) || tokenFromHeader) {
         let access_token =
             cookies && cookies.access_token
@@ -49,12 +67,45 @@ const checkUserJWT = (req, res, next) => {
                 : tokenFromHeader;
         // Verify token from client
         let decoded = verifyToken(access_token);
-        if (decoded) {
+        if (decoded && decoded !== "TokenExpiredError") {
             // We can assign another variable with req
             decoded.access_token = access_token;
             decoded.refresh_token = cookies.refresh_token;
             req.user = decoded;
             next();
+        } else if (decoded && decoded === "TokenExpiredError") {
+            // Handle refresh token when access token expire
+            if (cookies && cookies.refresh_token) {
+                let { newAccessToken, newRefreshToken } =
+                    await handleRefreshToken(cookies.refresh_token);
+                if (newAccessToken && newRefreshToken) {
+                    // set cookies
+                    res.cookie("access_token", newAccessToken, {
+                        maxAge: +process.env.MAX_AGE_ACCESS_TOKEN,
+                        httpOnly: true,
+                        domain: process.env.COOKIE_DOMAIN,
+                        path: "/",
+                    });
+                    res.cookie("refresh_token", newRefreshToken, {
+                        maxAge: +process.env.MAX_AGE_REFRESH_TOKEN,
+                        httpOnly: true,
+                        domain: process.env.COOKIE_DOMAIN,
+                        path: "/",
+                    });
+                }
+
+                return res.status(405).json({
+                    errorMessage: "Need to retry with new token !",
+                    errorCode: -1,
+                    data: "",
+                });
+            } else {
+                return res.status(401).json({
+                    errorMessage: "Not authenticated the user, Please login !",
+                    errorCode: -1,
+                    data: "",
+                });
+            }
         } else {
             return res.status(401).json({
                 errorMessage: "Not authenticated the user, Please login !",
@@ -107,9 +158,63 @@ const checkUserPermission = (req, res, next) => {
         });
     }
 };
+
+const checkServiceJWT = (req, res, next) => {
+    let tokenFromHeader = extractToken(req);
+    if (tokenFromHeader) {
+        let access_token = tokenFromHeader;
+        let decoded = verifyToken(access_token);
+        //TODO: refresh-token
+        if (decoded) {
+            return res.status(200).json({
+                errorCode: 0,
+                errorMessage: "Verify the user",
+                Data: "",
+            });
+        } else {
+            return res.status(401).json({
+                errorCode: -1,
+                errorMessage: "Not authenticated the user ",
+                Data: "",
+            });
+        }
+    } else {
+        return res.status(401).json({
+            errorCode: -1,
+            errorMessage: "Not authenticated the user ",
+            Data: "",
+        });
+    }
+};
+
+const handleRefreshToken = async refreshToken => {
+    let newAccessToken = "",
+        newRefreshToken = "";
+    // Get user
+    let user = await getUserByRefreshToken(refreshToken);
+    if (user) {
+        // Create new access token and refresh token
+        let payloadAccessToken = {
+            email: user.email,
+            groupWithRoles: user.groupWithRoles,
+            username: user.username,
+        };
+        newAccessToken = createJWT(payloadAccessToken);
+        newRefreshToken = uuidv4();
+        // Update refresh Token for user
+        await updateUserRefreshToken(user.email, newRefreshToken);
+    }
+    return {
+        newAccessToken,
+        newRefreshToken,
+    };
+};
+
 module.exports = {
     createJWT,
     verifyToken,
     checkUserJWT,
     checkUserPermission,
+    checkServiceJWT,
+    handleRefreshToken,
 };
