@@ -7,7 +7,6 @@ const router = express.Router();
  */
 
 const initWebRoutes = app => {
-    router.get("/", webController.handleGetHomePage);
     router.get("/user", webController.handleUserPage);
     router.post("/create-user", webController.handleCreateNewUser);
     router.post("/delete-user/:id", webController.handleDelteUser);
