@@ -14,6 +14,9 @@ module.exports = {
             accountType: {
                 type: Sequelize.STRING,
             },
+            otpCode: {
+                type: Sequelize.STRING,
+            },
             password: {
                 type: Sequelize.STRING,
             },

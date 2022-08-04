@@ -155,10 +155,81 @@ const getUserByRefreshToken = async token => {
     }
 };
 
+// Forgot password
+const isEmailLocal = async email => {
+    try {
+        let user = await db.User.findOne({
+            where: { email, accountType: "LOCAL" },
+        });
+        if (user) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        return false;
+    }
+};
+const compareOtpCode = async (email, otpCode) => {
+    try {
+        let user = await db.User.findOne({
+            where: { email, accountType: "LOCAL", otpCode },
+        });
+        if (user) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        return false;
+    }
+};
+const resetUserPassword = async rawData => {
+    try {
+        let { otpCode, email, newPassword } = rawData;
+        let resetPassword = hashUserPassword(newPassword);
+        let count = await db.User.update(
+            {
+                password: resetPassword,
+                otpCode: "",
+            },
+            {
+                where: {
+                    email: email,
+                    otpCode: otpCode,
+                    accountType: "LOCAL",
+                },
+            }
+        );
+        if (count && count[0] > 0) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.log(error);
+    }
+};
+const updateUserOtpCode = async (email, otpCode) => {
+    try {
+        await db.User.update(
+            {
+                otpCode: otpCode,
+            },
+            { where: { email, accountType: "LOCAL" } }
+        );
+    } catch (error) {
+        console.log(">>> error updateUserOtpCode", error);
+    }
+};
+
 module.exports = {
     registerNewUser,
     handleUserLogin,
     updateUserRefreshToken,
     upsertUserSocialMedia,
     getUserByRefreshToken,
+    isEmailLocal,
+    resetUserPassword,
+    updateUserOtpCode,
+    compareOtpCode,
 };

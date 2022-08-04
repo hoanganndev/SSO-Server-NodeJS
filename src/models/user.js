@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 defaultValue: "LOCAL",
             },
+            otpCode: DataTypes.STRING,
             username: DataTypes.STRING,
             address: DataTypes.STRING,
             sex: DataTypes.STRING,
