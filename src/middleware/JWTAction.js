@@ -6,6 +6,7 @@ import {
     updateUserRefreshToken,
 } from "../service/loginRegisterService";
 import "dotenv/config";
+
 const nonSecurePaths = [
     "/",
     "/login",
@@ -54,12 +55,9 @@ const extractToken = req => {
 
 // Check token validity
 const checkUserJWT = async (req, res, next) => {
-    //console.log(">>> check me");
     if (nonSecurePaths.includes(req.path)) return next();
     let cookies = req.cookies;
-    let tokenFromHeader = extractToken(req);
-    //console.log(">>> check tokenFromHeader", tokenFromHeader);
-    //console.log(">>> check cookies", cookies.access_token);
+    let tokenFromHeader = extractToken(req); // Bearer token
     if ((cookies && cookies.access_token) || tokenFromHeader) {
         let access_token =
             cookies && cookies.access_token
@@ -93,7 +91,6 @@ const checkUserJWT = async (req, res, next) => {
                         path: "/",
                     });
                 }
-
                 return res.status(405).json({
                     errorMessage: "Need to retry with new token !",
                     errorCode: -1,
@@ -164,7 +161,7 @@ const checkServiceJWT = (req, res, next) => {
     if (tokenFromHeader) {
         let access_token = tokenFromHeader;
         let decoded = verifyToken(access_token);
-        //TODO: refresh-token
+        // refresh-token
         if (decoded) {
             return res.status(200).json({
                 errorCode: 0,
