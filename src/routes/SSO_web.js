@@ -1,7 +1,6 @@
 import express from "express";
 import passport from "passport";
 import SSO_loginRegisterController from "../controller/SSO_loginRegisterController";
-import SSO_passportLocalController from "../controller/SSO_passportLocalController";
 import webController from "../controller/webController";
 import { isLogin } from "../middleware/SSO_checkUserLogin";
 const router = express.Router();
@@ -11,8 +10,8 @@ const router = express.Router();
  */
 
 const initSSOWebRoutes = app => {
-    //Router for SSO
     router.get("/", isLogin, webController.handleGetHomePage);
+    // Login local
     router.get("/login", isLogin, SSO_loginRegisterController.getLoginPage);
     router.post("/login", function (req, res, next) {
         passport.authenticate("local", function (error, user, info) {
@@ -32,10 +31,8 @@ const initSSOWebRoutes = app => {
             });
         })(req, res, next);
     });
-    router.post("/logout", SSO_passportLocalController.handleLogout);
-    router.post("/verify-token", SSO_loginRegisterController.verifySSOToken);
 
-    //Google
+    // Login Google
     router.get(
         "/auth/google",
         passport.authenticate("google", { scope: ["profile", "email"] })
@@ -51,7 +48,7 @@ const initSSOWebRoutes = app => {
         }
     );
 
-    //Facebook
+    // Login Facebook
     router.get(
         "/auth/facebook",
         passport.authenticate("facebook", { scope: ["email"] })
@@ -68,7 +65,7 @@ const initSSOWebRoutes = app => {
         }
     );
 
-    //Forgot password
+    // Forgot password
     router.get(
         "/forgot-password",
         SSO_loginRegisterController.getResetPasswordPage
@@ -78,6 +75,8 @@ const initSSOWebRoutes = app => {
         "/submit-reset-password",
         SSO_loginRegisterController.handleResetPassword
     );
+
+    router.post("/verify-token", SSO_loginRegisterController.verifySSOToken);
     return app.use("/", router);
 };
 export default initSSOWebRoutes;

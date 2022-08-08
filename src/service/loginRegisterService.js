@@ -2,59 +2,12 @@ import "dotenv/config";
 import { Op } from "sequelize"; // operator in sequelize: toan tu
 import { v4 as uuidv4 } from "uuid";
 import db from "../models";
-import {
-    checkEmailExist,
-    checkPassword,
-    checkPhoneExist,
-    hashUserPassword,
-} from "./inspectionService";
+import { checkPassword, hashUserPassword } from "./inspectionService";
 import { getGroupWithRoles } from "./rolesOfGroupService";
-
-const registerNewUser = async rawUserData => {
-    try {
-        // Check email/phone number are exist
-        let isEmailExist = await checkEmailExist(rawUserData.email);
-        if (isEmailExist) {
-            return {
-                errorMessage: "The email is already exist !",
-                errorCode: 1,
-                data: "email",
-            };
-        }
-        let isPhoneExist = await checkPhoneExist(rawUserData.phone);
-        if (isPhoneExist) {
-            return {
-                errorMessage: "The phone number is already exist !",
-                errorCode: 1,
-                data: "phone",
-            };
-        }
-        // Hash user password
-        let hashPassword = hashUserPassword(rawUserData.password);
-        // Create new user
-        await db.User.create({
-            email: rawUserData.email,
-            username: rawUserData.username,
-            password: hashPassword,
-            phone: rawUserData.phone,
-            groupId: 4, // Default belongs to guest group
-        });
-        return {
-            errorMessage: "A user is created successfully!",
-            errorCode: 0,
-            data: "",
-        };
-    } catch (error) {
-        console.log("🔴>>> Error from server: ", error);
-        return {
-            errorMessage: "Something wrongs in service !",
-            errorCode: -2,
-        };
-    }
-};
 
 const handleUserLogin = async rawData => {
     try {
+        // Find user with email or phone number
         let user = await db.User.findOne({
             where: {
                 [Op.or]: [
@@ -64,6 +17,7 @@ const handleUserLogin = async rawData => {
             },
         });
         if (user) {
+            // Check is correct user password
             let isCorrectPassword = checkPassword(
                 rawData.password,
                 user.password
@@ -84,14 +38,14 @@ const handleUserLogin = async rawData => {
             }
         }
         return {
-            errorMessage: "Your email/phone number or password is incorrect!",
+            errorMessage: "Your email/phone number or password is incorrect !",
             errorCode: 1,
             data: "",
         };
     } catch (error) {
         console.log(error);
         return {
-            errorMessage: "Somthing wrongs in service...",
+            errorMessage: "Something wrongs in service...",
             errorCode: -2,
         };
     }
@@ -223,7 +177,6 @@ const updateUserOtpCode = async (email, otpCode) => {
 };
 
 module.exports = {
-    registerNewUser,
     handleUserLogin,
     updateUserRefreshToken,
     upsertUserSocialMedia,

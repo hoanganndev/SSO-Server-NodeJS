@@ -9,7 +9,7 @@ const configPassportLocal = () => {
             },
             async (req, username, password, done) => {
                 const rawData = {
-                    valueLogin: username,
+                    valueLogin: username, // Email or phone number
                     password: password,
                 };
                 let res = await loginRegisterService.handleUserLogin(rawData);
@@ -22,15 +22,5 @@ const configPassportLocal = () => {
         )
     );
 };
-// Function for test code
-const handleLogout = (req, res, next) => {
-    req.session.destroy(function (err) {
-        req.logout(function (err) {
-            if (err) {
-                return next(err);
-            }
-            return res.redirect("/login");
-        }); // just only remove session at database, browser still not
-    });
-};
-module.exports = { configPassportLocal, handleLogout };
+
+module.exports = { configPassportLocal };

@@ -29,7 +29,7 @@ const configPassportGoogle = () => {
                 };
                 let user = await upsertUserSocialMedia(accountType, rawData);
                 user.code = uuidv4();
-                return cb(null, user); // after return this data will res to callbackURL
+                return cb(null, user); // After return this data will res to callbackURL
             }
         )
     );
